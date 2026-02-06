@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1 class="text-xl font-semibold mb-4">Notifications</h1>
+
+<div class="space-y-3">
+  {% for n in notifications %}
+    <a href="{{ n.url }}"
+       class="block bg-white p-4 rounded-lg shadow hover:bg-gray-50">
+      <strong>{{ n.title }}</strong>
+      <p class="text-sm text-gray-600">{{ n.message }}</p>
+    </a>
+  {% empty %}
+    <p class="text-gray-500">No notifications.</p>
+  {% endfor %}
+</div>
+{% endblock %}

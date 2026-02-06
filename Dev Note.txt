@@ -1,0 +1,13 @@
+Credential
+admin | 123456
+user | Jang0123
+
+When adding new app/pages to the project, check
+- serviceday/setting.py
+    - INSTALLED_APPS
+- serviceday/urls.py
+    - urlpatterns
+
+All app extends from base.html which includes the tailwind library, we are only adding partial view
+
+@login_required is decorator for auth at the top of view function

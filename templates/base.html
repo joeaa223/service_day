@@ -1,0 +1,22 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Service Day{% endblock %}</title>
+    <script src="{% static 'js/tailwind.js' %}"></script>
+
+</head>
+<body>
+
+{% include "includes/navbar.html" %}
+
+<hr>
+
+<main>
+    {% block content %}
+    {% endblock %}
+</main>
+
+</body>
+</html>
