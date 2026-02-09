@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'apps.dashboard',
     'apps.sample',
     'apps.sample_admin',
+    'apps.activities',
 ]
 
 MIDDLEWARE = [
