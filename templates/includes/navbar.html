@@ -1,72 +1,202 @@
-<nav class="bg-white shadow-sm border-b border-gray-200">
-  <div class="max-w-7xl mx-auto px-4">
-    <div class="flex items-center justify-between h-16">
-
-      <!-- Left: Brand -->
-      <div class="flex items-center space-x-6">
-        <span class="text-lg font-semibold text-gray-800">
-          Service Day
-        </span>
-
-        {% if user.is_authenticated %}
-        {% if user.is_staff %}
-        <a href="{% url 'admin_dashboard' %}" class="text-sm text-gray-600 hover:text-blue-600 transition">
-          Admin Dashboard
-        </a>
-        <a href="{% url 'sample_admin' %}" 
-        class="text-sm text-gray-600 hover:text-blue-600 transition">
-          Admin Sample
-        </a>
-        <a href="{% url 'broadcast_test' %}"
-        class="text-sm text-gray-600 hover:text-blue-600 transition">
-       Broadcast Test
-     </a>
-        {% else %}
-        <a href="{% url 'user_dashboard' %}" class="text-sm text-gray-600 hover:text-blue-600 transition">
-          Dashboard
-        </a>
-        <a href="{% url 'sample' %}" class="text-sm text-gray-600 hover:text-blue-600 transition">
-          Sample
-        </a>
-        {% endif %}
-        {% endif %}
-      </div>
-
-      <!-- Right: User / Auth -->
-      <div class="flex items-center space-x-4">
-
-        {% if user.is_authenticated %}
-        <a href="{% url 'notifications:list' %}"
-          class="relative inline-flex items-center text-gray-600 hover:text-blue-600">
-
-          🔔
-
-          {% if notification_count > 0 %}
-          <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full px-2">
-            {{ notification_count }}
-          </span>
-          {% endif %}
-        </a>
-        <span class="text-sm text-gray-500 hidden sm:block">
-          Hello, {{ user.username }}
-        </span>
-
-        <form action="{% url 'logout' %}" method="post">
-          {% csrf_token %}
-          <button type="submit"
-            class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg transition">
-            Logout
+<nav class="bg-white shadow-sm border-b border-gray-200" x-data="{ mobileOpen: false, notifOpen: false, accountOpen: false }">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex items-center justify-between h-16">
+  
+        <!-- Left side -->
+        <div class="flex items-center gap-4 min-w-0">
+          <!-- Mobile menu button -->
+          <button
+            @click="mobileOpen = !mobileOpen"
+            class="md:hidden inline-flex items-center justify-center p-2 rounded-md text-gray-600 hover:bg-gray-100 hover:text-blue-600"
+            aria-label="Toggle menu"
+          >
+            <svg x-show="!mobileOpen" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <svg x-show="mobileOpen" x-cloak xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
-        </form>
+  
+          <!-- Brand -->
+        {% if user.is_authenticated %}
+          <!--<a href="{% if user.is_staff %}{% url 'admin_dashboard' %}{% else %}{% url 'user_dashboard' %}{% endif %}"-->
+          <a href="{% url 'dashboard' %}"
+            class="text-lg font-semibold text-gray-800 truncate">
+            Service Day
+          </a>
 
-        {% else %}
-        <a href="{% url 'login' %}"
-          class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
-          Login
-        </a>
+          <!-- Desktop nav -->
+          <div class="hidden md:flex items-center gap-6">
+
+            <a href="{% url 'activity_listing' %}" class="text-sm text-gray-600 hover:text-blue-600 transition">
+              Activities
+            </a>
+
+          {% if user.is_staff %}
+          <a href="{% url 'ngo_listing' %}" class="text-sm text-gray-600 hover:text-blue-600 transition">
+            NGOs
+          </a>
+          <a href="{% url 'notification_manage' %}" class="text-sm text-gray-600 hover:text-blue-600 transition">
+            Notification
+          </a>
+          
+          {% else %}
+          <a href="{% url 'scanner' %}" class="text-sm text-gray-600 hover:text-blue-600 transition">
+            Scan QR
+          </a>
+          
+          {% endif %}
+          
+          </div>
         {% endif %}
-
+        </div>
+  
+        <!-- Right side -->
+        <div class="flex items-center gap-3">
+          {% if user.is_authenticated %}
+  
+          <!-- Notification -->
+          <div class="relative">
+            <button
+              @click="notifOpen = !notifOpen; accountOpen = false"
+              class="relative inline-flex items-center justify-center w-10 h-10 rounded-full text-gray-600 hover:text-blue-600 hover:bg-gray-100"
+              aria-label="Notifications"
+            >
+              <span class="text-lg">🔔</span>
+              
+              <span
+                id="notif-badge"
+                class="absolute -top-1 -right-1 min-w-[1.25rem] h-5 px-1 flex items-center justify-center bg-red-500 text-white text-xs rounded-full"
+              >
+                {{ notification_count|default:0}}
+              </span>
+              
+            </button>
+  
+            <!-- Notification dropdown -->
+            <div
+              x-show="notifOpen"
+              @click.outside="notifOpen = false"
+              x-cloak
+              class="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+            >
+              <div class="p-3 border-b border-gray-100">
+                <p class="text-sm font-semibold text-gray-800">Notifications</p>
+              </div>
+              <div class="p-3">
+                <p class="text-sm text-gray-500 mb-3">You have {{ notification_count|default:0 }} notifications.</p>
+                <a href="{% url 'notification_list' %}" class="block text-sm text-blue-600 hover:underline">
+                  View all notifications
+                </a>
+              </div>
+            </div>
+          </div>
+  
+          <!-- Desktop account menu -->
+          <div class="relative hidden md:block">
+            <button
+              @click="accountOpen = !accountOpen; notifOpen = false"
+              class="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100"
+            >
+              <span class="text-sm text-gray-600">Hello, {{ user.first_name }}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+  
+            <div
+              x-show="accountOpen"
+              @click.outside="accountOpen = false"
+              x-cloak
+              class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50"
+            >
+              <div class="p-3 border-b border-gray-100">
+                <p class="text-sm font-medium text-gray-800">{{ user.first_name }}</p>
+              </div>
+  
+              <button
+                type="button"
+                onclick="document.getElementById('logout-form').submit();"
+                class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-gray-50 rounded-b-lg"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+  
+          {% else %}
+          <a href="{% url 'login' %}"
+            class="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">
+            Login
+          </a>
+          {% endif %}
+        </div>
       </div>
     </div>
-  </div>
-</nav>
+  
+    <!-- Mobile menu -->
+    {% if user.is_authenticated %}
+    <div x-show="mobileOpen" x-cloak class="md:hidden border-t border-gray-200 bg-white">
+      <div class="px-4 py-4 flex flex-col min-h-[calc(100vh-4rem)]">
+  
+        <!-- Mobile nav links (left/top) -->
+        <div class="flex flex-col space-y-3">
+          {% if user.is_staff %}
+        
+          <a href="{% url 'ngo_listing' %}" class="text-sm text-gray-700 hover:text-blue-600">
+            Admin Sample
+          </a>
+                   
+          {% else %}
+          
+          <a href="{% url 'scanner' %}" class="text-sm text-gray-700 hover:text-blue-600">
+            QR Scanner
+          </a>
+          {% endif %}
+        </div>
+  
+        <!-- Push account section to bottom -->
+        <div class="mt-auto pt-6 border-t border-gray-200">
+          <button
+            @click="accountOpen = !accountOpen; notifOpen = false"
+            class="w-full flex items-center justify-between px-3 py-3 rounded-lg bg-gray-50 hover:bg-gray-100"
+          >
+            <div class="text-left">
+              <p class="text-sm font-medium text-gray-800">{{ user.first_name }}</p>
+              <p class="text-xs text-gray-500">Account</p>
+            </div>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-gray-500" fill="none"
+              viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+  
+          <div x-show="accountOpen" x-cloak class="mt-2 bg-white border border-gray-200 rounded-lg overflow-hidden">
+            <button
+              type="button"
+              onclick="document.getElementById('logout-form').submit();"
+              class="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-gray-50"
+            >
+              Logout
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  
+    <!-- Hidden logout form -->
+    {% if user.is_authenticated %}
+    <form id="logout-form" action="{% url 'logout' %}" method="post" class="hidden">
+      {% csrf_token %}
+    </form>
+    {% endif %}
+  </nav>

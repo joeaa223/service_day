@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div
+  class="min-h-screen bg-white"
+  x-data='activityCreatePage({
+    ngos: [
+      {% for ngo in ngos %}
+        {
+          id: "{{ ngo.id }}",
+          name: "{{ ngo.name|escapejs }}",
+          category: "",
+          city: "{{ ngo.city|default_if_none:''|escapejs }}",
+          state: "{{ ngo.state|default_if_none:''|escapejs }}"
+        }{% if not forloop.last %},{% endif %}
+      {% endfor %}
+    ]
+  })'
+>
+  <div class="mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="border-b border-slate-200 pb-8">
+      <div class="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+        <div class="max-w-3xl">
+          <p class="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400">Activity</p>
+          <h1 class="mt-3 text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
+            Create Activity
+          </h1>
+          <p class="mt-4 text-sm leading-6 text-slate-600">
+            Start by selecting an NGO partner. Activity details will only be available after an NGO is chosen.
+          </p>
+
+          <div class="mt-5 flex flex-wrap gap-2">
+            <span class="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600">
+              Draft
+            </span>
+            <span class="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600">
+              New Activity
+            </span>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+          <a href="#"
+             class="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+            Cancel
+          </a>
+          <button
+            type="submit"
+            form="activity-form"
+            class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-slate-800">
+            Save Draft
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <form id="activity-form" method="post" class="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-3">
+      {% csrf_token %}
+
+      <!-- Hidden selected NGO field -->
+      <input type="hidden" name="org" :value="selectedNgo ? selectedNgo.id : ''">
+
+      <!-- Main -->
+      <div class="space-y-8 lg:col-span-2">
+
+        <!-- NGO Selection -->
+        <section class="rounded-2xl border border-slate-200 p-6">
+          <div class="mb-5">
+            <h2 class="text-lg font-semibold text-slate-900">NGO Selection</h2>
+            <p class="mt-1 text-sm text-slate-500">
+              Select an existing NGO before entering event details.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 md:grid-cols-[1fr_auto]">
+            <div class="relative">
+              <label class="mb-2 block text-sm font-medium text-slate-700">Search NGO</label>
+
+              <div class="relative">
+                <input
+                  type="text"
+                  x-model="ngoSearch"
+                  @focus="ngoOpen = true"
+                  @input="ngoOpen = true"
+                  placeholder="Search NGO name"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 pr-10 text-sm focus:border-slate-400 focus:outline-none focus:ring-0">
+
+                <button
+                  type="button"
+                  @click="ngoOpen = !ngoOpen"
+                  class="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400">
+                  <svg class="h-4 w-4 transition-transform" :class="ngoOpen ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div
+                x-show="ngoOpen"
+                @click.outside="ngoOpen = false"
+                x-transition
+                class="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-sm">
+                <template x-for="ngo in filteredNgos" :key="ngo.id">
+                  <button
+                    type="button"
+                    @click="selectNgo(ngo)"
+                    class="flex w-full items-start rounded-xl px-3 py-3 text-left hover:bg-slate-50">
+                    <div>
+                      <p class="text-sm font-medium text-slate-900" x-text="ngo.name"></p>
+                      <p class="mt-1 text-xs text-slate-500">
+                        <span x-text="ngo.city"></span>
+                        <span x-show="ngo.city && ngo.state">, </span>
+                        <span x-text="ngo.state"></span>
+                      </p>
+                    </div>
+                  </button>
+                </template>
+
+                <div x-show="filteredNgos.length === 0" class="px-3 py-3 text-sm text-slate-500">
+                  No NGO found.
+                </div>
+              </div>
+            </div>
+
+            <div class="md:pt-7">
+              <a href="{% url 'register_ngo' %}"
+                 class="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 md:w-auto">
+                Create New NGO
+              </a>
+            </div>
+          </div>
+
+          <div x-show="selectedNgo" x-transition class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <p class="text-xs uppercase tracking-wide text-slate-400">Selected NGO</p>
+            <div class="mt-2 flex items-center justify-between gap-4">
+              <div>
+                <p class="text-sm font-medium text-slate-900" x-text="selectedNgo ? selectedNgo.name : ''"></p>
+                <p class="mt-1 text-sm text-slate-500">
+                  <span x-text="selectedNgo ? selectedNgo.city : ''"></span>
+                  <span x-show="selectedNgo && selectedNgo.city && selectedNgo.state">, </span>
+                  <span x-text="selectedNgo ? selectedNgo.state : ''"></span>
+                </p>
+              </div>
+
+              <button
+                type="button"
+                @click="clearNgo()"
+                class="text-sm font-medium text-slate-500 hover:text-slate-700">
+                Change
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Event Details -->
+        <section class="rounded-2xl border border-slate-200 p-6">
+          <div class="mb-5">
+            <h2 class="text-lg font-semibold text-slate-900">Event Details</h2>
+            <p class="mt-1 text-sm text-slate-500">
+              Fill in the event information after NGO selection.
+            </p>
+          </div>
+
+          <!-- Disabled / Hidden State -->
+          <div x-show="!selectedNgo" x-transition class="rounded-2xl border border-dashed border-slate-300 p-8 text-center">
+            <p class="text-sm font-medium text-slate-900">Select an NGO to continue</p>
+            <p class="mt-2 text-sm text-slate-500">
+              The activity form will be available after an NGO partner is selected.
+            </p>
+          </div>
+
+          <!-- Form -->
+          <div x-show="selectedNgo" x-transition>
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
+
+              <div class="sm:col-span-2">
+                <label class="mb-2 block text-sm font-medium text-slate-700">Activity Title</label>
+                <input
+                  type="text"
+                  name="title"
+                  required
+                  placeholder="Enter activity title"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none focus:ring-0">
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700">CSR Type</label>
+                <input
+                  type="text"
+                  name="service_type"
+                  required
+                  placeholder="e.g. Community"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none focus:ring-0">
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700">Capacity</label>
+                <input
+                  type="number"
+                  name="max_capacity"
+                  min="1"
+                  required
+                  placeholder="e.g. 30"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none focus:ring-0">
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700">Event Date & Time</label>
+                <input
+                  type="datetime-local"
+                  name="activity_datetime"
+                  required
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none focus:ring-0">
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700">Cutoff Date & Time</label>
+                <input
+                  type="datetime-local"
+                  name="cutoff_datetime"
+                  required
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none focus:ring-0">
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700">State</label>
+                <input
+                  type="text"
+                  value="Draft"
+                  disabled
+                  class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500">
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700">City</label>
+                <input
+                  type="text"
+                  name="city"
+                  required
+                  placeholder="e.g. Subang Jaya"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none focus:ring-0">
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700">Postcode</label>
+                <input
+                  type="text"
+                  name="postcode"
+                  placeholder="e.g. 47500"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none focus:ring-0">
+              </div>
+
+              <div>
+                <label class="mb-2 block text-sm font-medium text-slate-700">State / Region</label>
+                <input
+                  type="text"
+                  name="state"
+                  required
+                  placeholder="e.g. Selangor"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none focus:ring-0">
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="mb-2 block text-sm font-medium text-slate-700">Description</label>
+                <textarea
+                  name="description"
+                  rows="4"
+                  required
+                  placeholder="Enter activity summary"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-0"></textarea>
+              </div>
+
+              <div class="sm:col-span-2">
+                <label class="mb-2 block text-sm font-medium text-slate-700">Full Address</label>
+                <textarea
+                  name="address"
+                  rows="3"
+                  required
+                  placeholder="Enter full event address"
+                  class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none focus:ring-0"></textarea>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="space-y-6">
+
+        <section class="rounded-2xl border border-slate-200 p-6">
+          <h2 class="text-base font-semibold text-slate-900">Creation flow</h2>
+          <div class="mt-4 space-y-4 text-sm text-slate-600">
+            <p>1. Search and select an NGO.</p>
+            <p>2. Complete the event details form.</p>
+            <p>3. Save the activity in draft state.</p>
+          </div>
+        </section>
+
+        <section class="rounded-2xl border border-slate-200 p-6">
+          <h2 class="text-base font-semibold text-slate-900">Draft status</h2>
+          <div class="mt-4 space-y-3">
+            <div class="flex items-start justify-between gap-4">
+              <span class="text-sm text-slate-500">Current state</span>
+              <span class="text-sm font-medium text-slate-900">Draft</span>
+            </div>
+            <div class="flex items-start justify-between gap-4">
+              <span class="text-sm text-slate-500">Selected NGO</span>
+              <span class="text-sm font-medium text-slate-900" x-text="selectedNgo ? selectedNgo.name : 'Not selected'"></span>
+            </div>
+          </div>
+        </section>
+
+        <section class="rounded-2xl border border-slate-200 p-6">
+          <h2 class="text-base font-semibold text-slate-900">Notes</h2>
+          <div class="mt-4 space-y-4 text-sm leading-6 text-slate-600">
+            <p>
+              Event details remain hidden until an NGO is selected.
+            </p>
+            <p>
+              Use the Create New NGO button if the required NGO is not in the existing list.
+            </p>
+          </div>
+        </section>
+
+      </aside>
+    </form>
+  </div>
+</div>
+
+<script>
+  function activityCreatePage(config) {
+    return {
+      ngoOpen: false,
+      ngoSearch: '',
+      selectedNgo: null,
+      ngos: config.ngos || [],
+
+      get filteredNgos() {
+        if (!this.ngoSearch.trim()) return this.ngos;
+
+        const keyword = this.ngoSearch.toLowerCase();
+
+        return this.ngos.filter(ngo =>
+          (ngo.name || '').toLowerCase().includes(keyword) ||
+          (ngo.city || '').toLowerCase().includes(keyword) ||
+          (ngo.state || '').toLowerCase().includes(keyword)
+        );
+      },
+
+      selectNgo(ngo) {
+        this.selectedNgo = ngo;
+        this.ngoSearch = ngo.name;
+        this.ngoOpen = false;
+      },
+
+      clearNgo() {
+        this.selectedNgo = null;
+        this.ngoSearch = '';
+        this.ngoOpen = false;
+      }
+    }
+  }
+</script>
+{% endblock %}

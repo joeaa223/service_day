@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+                    {% if request.user.is_staff %}Manage Activities{% else %}Service Day Activities{% endif %}
+                </h1>
+                <p class="mt-1 text-sm text-slate-600">
+                    {% if request.user.is_staff %}
+                        View, manage, and monitor NGO service activities.
+                    {% else %}
+                        Browse available activities and join the ones that match your interest.
+                    {% endif %}
+                </p>
+            </div>
+
+            {% if request.user.is_staff %}
+                <a href="{% url 'create_activity' %}"
+                   class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800">
+                    + Create Activity
+                </a>
+            {% endif %}
+        </div>
+
+        <div x-data="{ view: 'grid' }" class="space-y-5">
+            <div class="flex items-center justify-end gap-2">
+                <button type="button"
+                        @click="view='grid'"
+                        :class="view === 'grid' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-300'"
+                        class="rounded-xl px-3 py-2 text-sm font-medium transition">
+                    Grid
+                </button>
+                <button type="button"
+                        @click="view='list'"
+                        :class="view === 'list' ? 'bg-slate-900 text-white' : 'bg-white text-slate-600 border border-slate-300'"
+                        class="rounded-xl px-3 py-2 text-sm font-medium transition">
+                    List
+                </button>
+            </div>
+
+            {% if activities %}
+                <div x-show="view === 'grid'" x-cloak class="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {% for activity in activities %}
+                        <div class="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+                            <div class="mb-4 flex items-start justify-between gap-3">
+                                <div>
+                                    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                                        {{ activity.org }}
+                                    </p>
+                                    <h2 class="mt-1 text-lg font-semibold text-slate-900">
+                                        {{ activity.title }}
+                                    </h2>
+                                </div>
+
+                                {% if activity.status == "active" %}
+                                    <span class="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                                        Active
+                                    </span>
+                                {% elif activity.status == "draft" %}
+                                    <span class="shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                        Draft
+                                    </span>
+                                {% elif activity.status == "completed" %}
+                                    <span class="shrink-0 rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700">
+                                        Completed
+                                    </span>
+                                {% elif activity.status == "cancelled" %}
+                                    <span class="shrink-0 rounded-full bg-rose-100 px-2.5 py-1 text-xs font-medium text-rose-700">
+                                        Cancelled
+                                    </span>
+                                {% else %}
+                                    <span class="shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                                        {{ activity.status|default:"Unknown"|title }}
+                                    </span>
+                                {% endif %}
+                            </div>
+
+                            <div class="space-y-3 text-sm text-slate-600">
+                                <p class="line-clamp-3">{{ activity.description }}</p>
+
+                                <div class="grid gap-2">
+                                    <div>
+                                        <span class="font-medium text-slate-800">Service Type:</span>
+                                        {{ activity.service_type }}
+                                    </div>
+                                    <div>
+                                        <span class="font-medium text-slate-800">Activity:</span>
+                                        {{ activity.activity_datetime|date:"D, d M Y" }} · {{ activity.activity_datetime|date:"g:i A" }}
+                                    </div>
+                                    <div>
+                                        <span class="font-medium text-slate-800">Cut-off:</span>
+                                        {{ activity.cutoff_datetime|date:"D, d M Y" }} · {{ activity.cutoff_datetime|date:"g:i A" }}
+                                    </div>
+                                    <div>
+                                        <span class="font-medium text-slate-800">Location:</span>
+                                        {{ activity.city }}, {{ activity.state }}{% if activity.postcode %} {{ activity.postcode }}{% endif %}
+                                    </div>
+                                    <div>
+                                        <span class="font-medium text-slate-800">Capacity:</span>
+                                        {{ activity.max_capacity }}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-5 border-t border-slate-100 pt-4 flex items-center justify-between gap-3">
+                                <span class="text-xs text-slate-500">
+                                    Created {{ activity.created_on|date:"d M Y" }}
+                                </span>
+
+                                {% if request.user.is_staff %}
+                                    <a href="{% url 'activity_manage' activity.id %}"
+                                       class="inline-flex items-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+                                        Manage
+                                    </a>
+                                {% else %}
+                                    {% if activity.is_joined or activity.user_participation_status == "joined" %}
+                                        <a href="{% url 'activity_manage' activity.id %}"
+                                           class="inline-flex items-center rounded-xl bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700">
+                                            Joined
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'activity_manage' activity.id %}"
+                                           class="inline-flex items-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800">
+                                            Join
+                                        </a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div x-show="view === 'list'" x-cloak class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200">
+                            <thead class="bg-slate-50">
+                                <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Title</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">NGO</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Service Type</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Activity Date</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Location</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Capacity</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Activity Status</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 bg-white">
+                                {% for activity in activities %}
+                                    <tr class="hover:bg-slate-50">
+                                        <td class="px-4 py-4 align-top">
+                                            <div class="font-medium text-slate-900">{{ activity.title }}</div>
+                                            <div class="mt-1 max-w-xs text-sm text-slate-500 line-clamp-2">
+                                                {{ activity.description }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-4 text-sm text-slate-700">{{ activity.org }}</td>
+                                        <td class="px-4 py-4 text-sm text-slate-700">{{ activity.service_type }}</td>
+                                        <td class="px-4 py-4 text-sm text-slate-700">
+                                            {{ activity.activity_datetime|date:"d M Y" }}<br>
+                                            <span class="text-slate-500">{{ activity.activity_datetime|date:"g:i A" }}</span>
+                                        </td>
+                                        <td class="px-4 py-4 text-sm text-slate-700">
+                                            {{ activity.city }}, {{ activity.state }}
+                                        </td>
+                                        <td class="px-4 py-4 text-sm text-slate-700">{{ activity.max_capacity }}</td>
+                                        <td class="px-4 py-4">
+                                            {% if activity.status == "active" %}
+                                                <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                                                    Active
+                                                </span>
+                                            {% elif activity.status == "draft" %}
+                                                <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                                    Draft
+                                                </span>
+                                            {% elif activity.status == "completed" %}
+                                                <span class="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700">
+                                                    Completed
+                                                </span>
+                                            {% elif activity.status == "cancelled" %}
+                                                <span class="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-medium text-rose-700">
+                                                    Cancelled
+                                                </span>
+                                            {% else %}
+                                                <span class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700">
+                                                    {{ activity.status|default:"Unknown"|title }}
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="px-4 py-4 text-right">
+                                            {% if request.user.is_staff %}
+                                                <a href="{% url 'activity_manage' activity.id %}"
+                                                   class="inline-flex items-center rounded-xl border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+                                                    Manage
+                                                </a>
+                                            {% else %}
+                                               
+                                                    <a href="{% url 'activity_manage' activity.id %}"
+                                                       class="inline-flex items-center rounded-xl bg-slate-900 px-3 py-2 text-sm font-medium text-white transition hover:bg-slate-800">
+                                                        View
+                                                    </a>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            {% else %}
+                <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center shadow-sm">
+                    <div class="mx-auto max-w-md">
+                        <h2 class="text-lg font-semibold text-slate-900">No activities found</h2>
+                        <p class="mt-2 text-sm text-slate-600">
+                            No activity has been created yet.
+                        </p>
+                        <div class="mt-5 flex items-center justify-center gap-3">
+                            {% if request.user.is_staff %}
+                                <a href="{% url 'create_activity' %}"
+                                   class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800">
+                                    Create Activity
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

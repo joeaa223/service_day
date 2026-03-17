@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen bg-gray-50">
+  <div class="mx-auto max-w-md px-4 py-8">
+    <div class="mb-6 text-center">
+      <h1 class="text-2xl font-semibold text-gray-900">Scan QR Code</h1>
+      <p class="mt-2 text-sm text-gray-500">
+        Point your camera at the activity QR code to check in.
+      </p>
+    </div>
+
+    <div class="overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-gray-200">
+      <div class="p-4">
+        <div class="relative">
+          <div id="reader" class="w-full overflow-hidden rounded-xl bg-black"></div>
+
+          <div class="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div class="h-56 w-56 rounded-2xl border-2 border-white/80 shadow-[0_0_0_9999px_rgba(0,0,0,0.18)]"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-100 px-4 py-3 space-y-3">
+        <p id="scanner-status" class="text-sm text-gray-500">Opening camera...</p>
+
+        <div class="flex gap-3">
+          <button
+            id="capture-btn"
+            type="button"
+            class="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700"
+          >
+            Capture & Analyze
+          </button>
+
+          <button
+            id="restart-btn"
+            type="button"
+            class="rounded-xl border border-gray-300 bg-white px-4 py-3 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          >
+            Restart
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-200">
+      <p class="text-sm text-gray-600">
+        If live scan is not detecting well, tap <span class="font-medium">Capture & Analyze</span>.
+      </p>
+    </div>
+  </div>
+</div>
+
+<canvas id="capture-canvas" class="hidden"></canvas>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsqr/dist/jsQR.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const statusEl = document.getElementById("scanner-status");
+    const captureBtn = document.getElementById("capture-btn");
+    const restartBtn = document.getElementById("restart-btn");
+    const canvas = document.getElementById("capture-canvas");
+
+    const scannerRegionId = "reader";
+    let html5QrCode = new Html5Qrcode(scannerRegionId);
+    let hasScanned = false;
+    let scannerRunning = false;
+
+    function setStatus(message) {
+        statusEl.textContent = message;
+    }
+
+    function isValidHttpUrl(value) {
+        try {
+            const url = new URL(value);
+            return url.protocol === "http:" || url.protocol === "https:";
+        } catch (_) {
+            return false;
+        }
+    }
+
+    function redirectToDecodedText(decodedText) {
+        if (isValidHttpUrl(decodedText)) {
+            window.location.href = decodedText;
+            return true;
+        }
+
+        setStatus("Invalid QR content. Expected a URL.");
+        return false;
+    }
+
+    function handleScanSuccess(decodedText) {
+        if (hasScanned) return;
+        hasScanned = true;
+
+        setStatus("QR detected. Redirecting...");
+
+        html5QrCode.stop()
+            .then(() => {
+                scannerRunning = false;
+                if (!redirectToDecodedText(decodedText)) {
+                    hasScanned = false;
+                    startScanner();
+                }
+            })
+            .catch(() => {
+                scannerRunning = false;
+                if (!redirectToDecodedText(decodedText)) {
+                    hasScanned = false;
+                }
+            });
+    }
+
+    function handleScanError() {
+        // ignore continuous scan errors
+    }
+
+    async function startScanner() {
+        if (scannerRunning) return;
+
+        setStatus("Opening camera...");
+        hasScanned = false;
+
+        try {
+            await html5QrCode.start(
+                { facingMode: "environment" },
+                {
+                    fps: 10,
+                    qrbox: { width: 220, height: 220 },
+                    aspectRatio: 1.0,
+                },
+                handleScanSuccess,
+                handleScanError
+            );
+
+            scannerRunning = true;
+            setStatus("Camera ready. Scan a QR code.");
+        } catch (err) {
+            console.error("QR scanner start failed:", err);
+            scannerRunning = false;
+            setStatus("Unable to open camera. Please allow permission and reload.");
+        }
+    }
+
+    async function stopScanner() {
+        if (!scannerRunning) return;
+
+        try {
+            await html5QrCode.stop();
+        } catch (err) {
+            console.warn("Stop scanner warning:", err);
+        }
+
+        scannerRunning = false;
+    }
+
+    async function captureAndAnalyze() {
+        setStatus("Capturing image...");
+
+        const video = document.querySelector("#reader video");
+
+        if (!video || !video.videoWidth || !video.videoHeight) {
+            setStatus("Camera frame not ready yet.");
+            return;
+        }
+
+        const context = canvas.getContext("2d");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
+
+        if (code && code.data) {
+            hasScanned = true;
+            setStatus("QR found in captured image. Redirecting...");
+            await stopScanner();
+            redirectToDecodedText(code.data);
+        } else {
+            setStatus("No QR code detected in captured image. Try moving closer or improving lighting.");
+        }
+    }
+
+    captureBtn.addEventListener("click", captureAndAnalyze);
+
+    restartBtn.addEventListener("click", async function () {
+        setStatus("Restarting camera...");
+        await stopScanner();
+        startScanner();
+    });
+
+    startScanner();
+});
+</script>
+{% endblock %}
