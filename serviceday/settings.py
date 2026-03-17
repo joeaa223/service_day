@@ -31,6 +31,9 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne", # Important to put this on top to let runserver on mode ASGI/Daphne
+    "channels", # For real-time service (ASGI)
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -38,11 +41,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+# Custom Web Pages
+    'apps.websocket',
     'apps.notifications',
     'apps.accounts',
     'apps.dashboard',
-    'apps.sample',
-    'apps.sample_admin',
+    'apps.activities',
+    'apps.checkin',
+    'apps.ngo',
 ]
 
 MIDDLEWARE = [
@@ -76,8 +82,18 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'serviceday.wsgi.application'
+# [Real Time] (Asynchronous Server Gateway Interface
+ASGI_APPLICATION = 'serviceday.asgi.application'
 
+# [Default] Web Server Gateway Interface
+# WSGI_APPLICATION = 'serviceday.wsgi.application'
+
+# [Real Time] In Memory channel
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases

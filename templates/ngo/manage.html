@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="min-h-screen bg-white">
+  <div class="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="border-b border-slate-200 pb-6">
+      <div class="flex items-start justify-between gap-6">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400">
+            NGO
+          </p>
+          <h1 class="mt-2 text-3xl font-semibold text-slate-900">
+            Manage NGO
+          </h1>
+          <p class="mt-2 text-sm text-slate-500">
+            View and update NGO details. The UUID is read-only.
+          </p>
+        </div>
+
+        <div class="flex gap-3">
+          
+          <button
+            type="submit"
+            form="ngo-form"
+            class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800">
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <form id="ngo-form" method="post" class="mt-10 space-y-10">
+      {% csrf_token %}
+
+      <!-- Basic Information -->
+      <section>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Basic Information
+        </h2>
+
+        <div class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-medium text-slate-700">
+              UUID
+            </label>
+            <input
+              type="text"
+              value="{{ ngo.id }}"
+              disabled
+              class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500">
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-medium text-slate-700">
+              NGO Name
+            </label>
+            <input
+              type="text"
+              name="name"
+              value="{{ ngo.name }}"
+              class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700">
+              Registration Number
+            </label>
+            <input
+              type="text"
+              name="registration_number"
+              value="{{ ngo.registration_number }}"
+              class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700">
+              Status
+            </label>
+            <select
+              name="is_active"
+              class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none">
+              <option value="True" {% if ngo.is_active %}selected{% endif %}>Active</option>
+              <option value="False" {% if not ngo.is_active %}selected{% endif %}>Inactive</option>
+            </select>
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-medium text-slate-700">
+              Description
+            </label>
+            <textarea
+              name="description"
+              rows="4"
+              class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none">{{ ngo.description }}</textarea>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact -->
+      <section>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Contact Person
+        </h2>
+
+        <div class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700">
+              Contact Name
+            </label>
+            <input
+              type="text"
+              name="contact_name"
+              value="{{ ngo.contact_name }}"
+              class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none">
+          </div>
+
+          <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700">
+              Contact Phone
+            </label>
+            <input
+              type="text"
+              name="contact_phone"
+              value="{{ ngo.contact_phone }}"
+              class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none">
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="mb-1 block text-sm font-medium text-slate-700">
+              Contact Email
+            </label>
+            <input
+              type="email"
+              name="contact_email"
+              value="{{ ngo.contact_email }}"
+              class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none">
+          </div>
+        </div>
+      </section>
+
+      <!-- Address -->
+      <section>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Address
+        </h2>
+
+        <div class="mt-4 grid grid-cols-1 gap-6">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700">
+              Address
+            </label>
+            <textarea
+              name="address"
+              rows="3"
+              class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm focus:border-slate-400 focus:outline-none">{{ ngo.address }}</textarea>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <div>
+              <label class="mb-1 block text-sm font-medium text-slate-700">
+                Postcode
+              </label>
+              <input
+                type="text"
+                name="postcode"
+                value="{{ ngo.postcode }}"
+                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm font-medium text-slate-700">
+                City
+              </label>
+              <input
+                type="text"
+                name="city"
+                value="{{ ngo.city }}"
+                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none">
+            </div>
+
+            <div>
+              <label class="mb-1 block text-sm font-medium text-slate-700">
+                State
+              </label>
+              <input
+                type="text"
+                name="state"
+                value="{{ ngo.state }}"
+                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-slate-400 focus:outline-none">
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Metadata -->
+      <section>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-slate-400">
+          Metadata
+        </h2>
+
+        <div class="mt-4 grid grid-cols-1 gap-6 sm:grid-cols-2">
+          <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700">
+              Created At
+            </label>
+            <input
+              type="text"
+              value="{{ ngo.created_at|date:'d M Y, h:i A' }}"
+              disabled
+              class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500">
+          </div>
+
+          <div>
+            <label class="mb-1 block text-sm font-medium text-slate-700">
+              Updated At
+            </label>
+            <input
+              type="text"
+              value="{{ ngo.updated_at|date:'d M Y, h:i A' }}"
+              disabled
+              class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-500">
+          </div>
+        </div>
+      </section>
+    </form>
+
+  </div>
+</div>
+{% endblock %}

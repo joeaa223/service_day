@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="min-h-screen bg-slate-50">
+  <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <div>
+        <p class="text-sm font-semibold uppercase tracking-wide text-blue-600">Activity Center</p>
+        <h1 class="text-3xl font-bold text-slate-900">Activity Listing</h1>
+        <p class="mt-1 text-sm text-slate-500">
+          Browse available CSR activities, review details, and take action quickly.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap gap-3">
+        {% if user.is_staff %}
+          <a href="{% url 'create_activity' %}"
+             class="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
+            Create Activity
+          </a>
+        {% else %}
+          <button
+            class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+            My Activity
+          </button>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Total Activities</p>
+        <h2 class="mt-3 text-3xl font-bold text-slate-900">18</h2>
+        <p class="mt-2 text-xs text-slate-500">Published and scheduled records</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Available</p>
+        <h2 class="mt-3 text-3xl font-bold text-slate-900">12</h2>
+        <p class="mt-2 text-xs text-emerald-600">Open for registration</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">Cutoff Soon</p>
+        <h2 class="mt-3 text-3xl font-bold text-slate-900">4</h2>
+        <p class="mt-2 text-xs text-amber-600">Closing in the next few days</p>
+      </div>
+
+      <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-slate-500">
+          {% if user.is_staff %}Draft Activities{% else %}Joined Activities{% endif %}
+        </p>
+        <h2 class="mt-3 text-3xl font-bold text-slate-900">
+          {% if user.is_staff %}3{% else %}2{% endif %}
+        </h2>
+        <p class="mt-2 text-xs text-slate-500">
+          {% if user.is_staff %}Pending publication{% else %}Your active participation{% endif %}
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-4">
+
+      <!-- Main -->
+      <div class="space-y-6 xl:col-span-3">
+
+        <!-- Filter -->
+        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <h2 class="text-lg font-semibold text-slate-900">Filter Activities</h2>
+              <p class="text-sm text-slate-500">Refine by keyword, district, type, or current activity status</p>
+            </div>
+
+           
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+            <div class="xl:col-span-2">
+              <label class="mb-2 block text-sm font-medium text-slate-700">Search Activity</label>
+              <input
+                type="text"
+                placeholder="Search title, venue, NGO or location"
+                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-medium text-slate-700">District</label>
+              <select
+                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                <option>All Districts</option>
+                <option>Subang Jaya</option>
+                <option>Shah Alam</option>
+                <option>Petaling Jaya</option>
+                <option>Klang</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-medium text-slate-700">CSR Type</label>
+              <select
+                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                <option>All Types</option>
+                <option>Community</option>
+                <option>Environment</option>
+                <option>Education</option>
+                <option>Healthcare</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-sm font-medium text-slate-700">Status</label>
+              <select
+                class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                <option>All Status</option>
+                <option>Available</option>
+                <option>Cutoff Soon</option>
+                <option>Past Event</option>
+                <option>Full</option>
+                {% if user.is_staff %}
+                  <option>Draft</option>
+                {% endif %}
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-4 flex flex-wrap gap-3">
+            <button
+              class="inline-flex items-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800">
+              Apply Filter
+            </button>
+
+            <button
+              class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+              Reset
+            </button>
+
+            <button
+              class="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100">
+              Available
+            </button>
+
+            <button
+              class="inline-flex items-center rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-100">
+              Cutoff Soon
+            </button>
+
+            <button
+              class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+              Past Event
+            </button>
+
+            {% if not user.is_staff %}
+              <button
+                class="inline-flex items-center rounded-xl border border-blue-300 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-100">
+                My Activity
+              </button>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Listing -->
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div class="border-b border-slate-200 px-6 py-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <h2 class="text-lg font-semibold text-slate-900">Available Activities</h2>
+                <p class="text-sm text-slate-500">Expand each record to view description, cutoff date, full address, and more</p>
+              </div>
+              <span class="rounded-full bg-blue-100 px-3 py-1 text-xs font-semibold text-blue-700">
+                12 Records
+              </span>
+            </div>
+          </div>
+
+          <div class="divide-y divide-slate-100">
+
+            <!-- Activity 1 -->
+            <div x-data="{ open: false }" class="px-6 py-5">
+              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-lg font-semibold text-slate-900">Food Basket Distribution</h3>
+                    <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                      Community
+                    </span>
+                    <span class="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                      Available
+                    </span>
+                  </div>
+
+                  <div class="mt-4 grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-2 xl:grid-cols-4">
+                    <p><span class="font-medium text-slate-800">Venue:</span> Subang Jaya</p>
+                    <p><span class="font-medium text-slate-800">CSR Type:</span> Community</p>
+                    <p><span class="font-medium text-slate-800">Capacity:</span> 20 pax</p>
+                    <p><span class="font-medium text-slate-800">Date:</span> 20 Mar 2026</p>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 lg:justify-end">
+                  {% if user.is_staff %}
+                    <button
+                      class="inline-flex items-center rounded-xl border border-amber-300 bg-amber-50 px-4 py-2.5 text-sm font-medium text-amber-700 hover:bg-amber-100">
+                      Disable
+                    </button>
+                    <a href="#"
+                       class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                      Edit
+                    </a>
+                    <button
+                      class="inline-flex items-center rounded-xl border border-rose-300 bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-100">
+                      Delete
+                    </button>
+                  {% else %}
+                    <button
+                      class="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
+                      Join
+                    </button>
+                    <a href="#"
+                       class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                      View
+                    </a>
+                  {% endif %}
+
+                  <button
+                    @click="open = !open"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    <span x-text="open ? 'Hide Details' : 'Show Details'"></span>
+                    <svg class="h-4 w-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div x-show="open" x-collapse class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  <div>
+                    <h4 class="text-sm font-semibold text-slate-900">Description</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                      Help prepare and distribute food baskets to low-income families in the surrounding area. Volunteers will assist with registration, packing, and basic coordination.
+                    </p>
+
+                    <div class="mt-5 grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-2">
+                      <p><span class="font-medium text-slate-800">Cutoff Date:</span> 18 Mar 2026</p>
+                      <p><span class="font-medium text-slate-800">NGO:</span> Helping Hands NGO</p>
+                      <p><span class="font-medium text-slate-800">Start Time:</span> 09:00 AM</p>
+                      <p><span class="font-medium text-slate-800">End Time:</span> 01:00 PM</p>
+                      <p><span class="font-medium text-slate-800">Joined:</span> 18 / 20</p>
+                      <p><span class="font-medium text-slate-800">Coordinator:</span> Nur Iman</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 class="text-sm font-semibold text-slate-900">Full Address</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                      Community Hall 2, Jalan SS15/8A, Subang Jaya, Selangor, Malaysia.
+                    </p>
+
+                    <div class="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+                      <h5 class="text-sm font-semibold text-slate-900">Additional Details</h5>
+                      <div class="mt-3 space-y-2 text-sm text-slate-600">
+                        <p><span class="font-medium text-slate-800">Dress Code:</span> Casual</p>
+                        <p><span class="font-medium text-slate-800">Transport:</span> Self-arranged</p>
+                        <p><span class="font-medium text-slate-800">Remarks:</span> Please arrive 15 minutes earlier for briefing.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Activity 2 -->
+            <div x-data="{ open: false }" class="px-6 py-5">
+              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-lg font-semibold text-slate-900">Park Clean-Up Program</h3>
+                    <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                      Environment
+                    </span>
+                    <span class="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700">
+                      Cutoff Soon
+                    </span>
+                  </div>
+
+                  <div class="mt-4 grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-2 xl:grid-cols-4">
+                    <p><span class="font-medium text-slate-800">Venue:</span> Shah Alam</p>
+                    <p><span class="font-medium text-slate-800">CSR Type:</span> Environment</p>
+                    <p><span class="font-medium text-slate-800">Capacity:</span> 15 pax</p>
+                    <p><span class="font-medium text-slate-800">Date:</span> 22 Mar 2026</p>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 lg:justify-end">
+                  {% if user.is_staff %}
+                    <button
+                      class="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100">
+                      Enable
+                    </button>
+                    <a href="#"
+                       class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                      Edit
+                    </a>
+                    <button
+                      class="inline-flex items-center rounded-xl border border-rose-300 bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-100">
+                      Delete
+                    </button>
+                  {% else %}
+                    <button
+                      class="inline-flex items-center rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-rose-700">
+                      Withdraw
+                    </button>
+                    <a href="#"
+                       class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                      View
+                    </a>
+                  {% endif %}
+
+                  <button
+                    @click="open = !open"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    <span x-text="open ? 'Hide Details' : 'Show Details'"></span>
+                    <svg class="h-4 w-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div x-show="open" x-collapse class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  <div>
+                    <h4 class="text-sm font-semibold text-slate-900">Description</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                      Join the community clean-up and tree planting session at the public park. This activity promotes environmental care and teamwork with local volunteers.
+                    </p>
+
+                    <div class="mt-5 grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-2">
+                      <p><span class="font-medium text-slate-800">Cutoff Date:</span> 20 Mar 2026</p>
+                      <p><span class="font-medium text-slate-800">NGO:</span> Green Earth Society</p>
+                      <p><span class="font-medium text-slate-800">Start Time:</span> 08:30 AM</p>
+                      <p><span class="font-medium text-slate-800">End Time:</span> 12:30 PM</p>
+                      <p><span class="font-medium text-slate-800">Joined:</span> 12 / 15</p>
+                      <p><span class="font-medium text-slate-800">Coordinator:</span> Aisyah Karim</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 class="text-sm font-semibold text-slate-900">Full Address</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                      Taman Tasik Shah Alam, Persiaran Bandar Raya, Seksyen 14, Shah Alam, Selangor, Malaysia.
+                    </p>
+
+                    <div class="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+                      <h5 class="text-sm font-semibold text-slate-900">Additional Details</h5>
+                      <div class="mt-3 space-y-2 text-sm text-slate-600">
+                        <p><span class="font-medium text-slate-800">Dress Code:</span> Sports attire</p>
+                        <p><span class="font-medium text-slate-800">Transport:</span> Company van available</p>
+                        <p><span class="font-medium text-slate-800">Remarks:</span> Gloves and tools will be provided onsite.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Activity 3 -->
+            <div x-data="{ open: false }" class="px-6 py-5">
+              <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div class="min-w-0 flex-1">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <h3 class="text-lg font-semibold text-slate-900">Children Learning Workshop</h3>
+                    <span class="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-semibold text-sky-700">
+                      Education
+                    </span>
+
+                    {% if user.is_staff %}
+                      <span class="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                        Draft
+                      </span>
+                    {% else %}
+                      <span class="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">
+                        Available
+                      </span>
+                    {% endif %}
+                  </div>
+
+                  <div class="mt-4 grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-2 xl:grid-cols-4">
+                    <p><span class="font-medium text-slate-800">Venue:</span> Petaling Jaya</p>
+                    <p><span class="font-medium text-slate-800">CSR Type:</span> Education</p>
+                    <p><span class="font-medium text-slate-800">Capacity:</span> 25 pax</p>
+                    <p><span class="font-medium text-slate-800">Date:</span> 28 Mar 2026</p>
+                  </div>
+                </div>
+
+                <div class="flex flex-wrap gap-2 lg:justify-end">
+                  {% if user.is_staff %}
+                    <button
+                      class="inline-flex items-center rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm font-medium text-emerald-700 hover:bg-emerald-100">
+                      Enable
+                    </button>
+                    <a href="#"
+                       class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                      Edit
+                    </a>
+                    <button
+                      class="inline-flex items-center rounded-xl border border-rose-300 bg-rose-50 px-4 py-2.5 text-sm font-medium text-rose-700 hover:bg-rose-100">
+                      Delete
+                    </button>
+                  {% else %}
+                    <button
+                      class="inline-flex items-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-700">
+                      Join
+                    </button>
+                    <a href="#"
+                       class="inline-flex items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                      View
+                    </a>
+                  {% endif %}
+
+                  <button
+                    @click="open = !open"
+                    class="inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50">
+                    <span x-text="open ? 'Hide Details' : 'Show Details'"></span>
+                    <svg class="h-4 w-4 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div x-show="open" x-collapse class="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+                <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
+                  <div>
+                    <h4 class="text-sm font-semibold text-slate-900">Description</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                      Assist children with digital literacy and simple learning activities. Volunteers will support reading sessions, creative tasks, and group facilitation.
+                    </p>
+
+                    <div class="mt-5 grid grid-cols-1 gap-3 text-sm text-slate-600 sm:grid-cols-2">
+                      <p><span class="font-medium text-slate-800">Cutoff Date:</span> 26 Mar 2026</p>
+                      <p><span class="font-medium text-slate-800">NGO:</span> Care4Kids Foundation</p>
+                      <p><span class="font-medium text-slate-800">Start Time:</span> 10:00 AM</p>
+                      <p><span class="font-medium text-slate-800">End Time:</span> 02:00 PM</p>
+                      <p><span class="font-medium text-slate-800">Joined:</span> 7 / 25</p>
+                      <p><span class="font-medium text-slate-800">Coordinator:</span> Hafiz Rahman</p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h4 class="text-sm font-semibold text-slate-900">Full Address</h4>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">
+                      Pusat Komuniti Bestari, Jalan 17/21, Seksyen 17, Petaling Jaya, Selangor, Malaysia.
+                    </p>
+
+                    <div class="mt-5 rounded-xl border border-slate-200 bg-white p-4">
+                      <h5 class="text-sm font-semibold text-slate-900">Additional Details</h5>
+                      <div class="mt-3 space-y-2 text-sm text-slate-600">
+                        <p><span class="font-medium text-slate-800">Dress Code:</span> Smart casual</p>
+                        <p><span class="font-medium text-slate-800">Transport:</span> Self-arranged</p>
+                        <p><span class="font-medium text-slate-800">Remarks:</span> Experience working with children is an advantage.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="space-y-6">
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-900">Quick Guide</h2>
+          <div class="mt-4 space-y-3 text-sm text-slate-600">
+            <p>Use filters to narrow down the activity list faster.</p>
+            <p>Expand each activity card to see description, cutoff date, full address, and supporting details.</p>
+            {% if user.is_staff %}
+              <p>Admins can create, enable, disable, edit, and delete activities from the listing.</p>
+            {% else %}
+              <p>Staff can join, withdraw, and view activity details from the same page.</p>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <div class="border-b border-slate-200 px-6 py-4">
+            <h2 class="text-lg font-semibold text-slate-900">Status Legend</h2>
+          </div>
+          <div class="space-y-3 px-6 py-5 text-sm">
+            <div class="flex items-center gap-3">
+              <span class="rounded-full bg-blue-100 px-2.5 py-1 text-xs font-semibold text-blue-700">Available</span>
+              <span class="text-slate-600">Open for participation</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-semibold text-rose-700">Cutoff Soon</span>
+              <span class="text-slate-600">Registration closing soon</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">Draft</span>
+              <span class="text-slate-600">Pending publication</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-700">Community</span>
+              <span class="text-slate-600">CSR category tag</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 class="text-lg font-semibold text-slate-900">Activity Notes</h2>
+          <div class="mt-5 space-y-4">
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-sm font-medium text-slate-800">Upcoming Peak Period</p>
+              <p class="mt-1 text-sm text-slate-500">
+                Several CSR activities are scheduled over the next two weeks.
+              </p>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p class="text-sm font-medium text-slate-800">Reminder</p>
+              <p class="mt-1 text-sm text-slate-500">
+                Keep capacity, cutoff date, and venue details updated for better user experience.
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -27,8 +27,9 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("", include("apps.accounts.urls")),
     path("", include("apps.dashboard.urls")),
-    path("", include("apps.sample.urls")),
-    path("", include("apps.sample_admin.urls")),
-    path("", include("apps.notifications.urls")),
+    path("", include("apps.ngo.urls")),
+    path("notifications/", include("apps.notifications.urls")),
+    path("", include("apps.activities.urls")),
+    path("", include("apps.checkin.urls")),
 ]
 

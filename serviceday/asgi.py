@@ -1,16 +1,20 @@
-"""
-ASGI config for serviceday project.
-
-It exposes the ASGI callable as a module-level variable named ``application``.
-
-For more information on this file, see
-https://docs.djangoproject.com/en/6.0/howto/deployment/asgi/
-"""
-
 import os
 
+print("ASGI FILE LOADED")
+
 from django.core.asgi import get_asgi_application
+from channels.auth import AuthMiddlewareStack
+from channels.routing import ProtocolTypeRouter, URLRouter
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'serviceday.settings')
+import serviceday.routing
 
-application = get_asgi_application()
+print("ROUTING IMPORTED", serviceday.routing.websocket_urlpatterns)
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "serviceday.settings")
+
+application = ProtocolTypeRouter({
+    "http": get_asgi_application(),
+    "websocket": AuthMiddlewareStack(
+        URLRouter(serviceday.routing.websocket_urlpatterns)
+    ),
+})

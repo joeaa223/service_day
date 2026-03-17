@@ -11,3 +11,45 @@ When adding new app/pages to the project, check
 All app extends from base.html which includes the tailwind library, we are only adding partial view
 
 @login_required is decorator for auth at the top of view function
+
+
+library to includes
+pip install channels daphne
+
+Command Lists
+python3.14 --version
+python3.14 -m pip install channels daphne
+py -3.14 
+manage.py runserver
+manage.py startapp ngo apps/ngo
+python manage.py makemigrations
+python manage.py makemigrations activities
+python manage.py migrate
+pip install qrcode[pil]
+Category in activities
+
+
+Functionalities
+UC 1
+1.	Administrator logs into the dashboard. [Done]
+2.	Administrator views the list of registered NGOs. [Done]
+3.	Administrator adds, updates, or removes NGO and NGO activity availability details. [Done]
+4.	The system updates the availability status in real time [Done]
+UC 2
+1.	Employee logs into the dashboard. [Done]
+2.	Employee views the list of registered NGOs activities. [Done]
+UC 3
+1.	Employee logs into the dashboard. [Done]
+2.	Employee views the list of registered NGOs activities and registers. [Done]
+3.	Employee is able to edit/cancel until the cut-off date/time. [Done]
+UC 4
+1.	Administrators logs into the dashboard. [Done]
+2.	Administrators views the participation of employees in NGOs activities. [Done]
+3.	Employee can edit/cancel until the cut-off date/time. [Done]
+UC 5
+1.	Admin sets the schedule reminders
+2.	Admin will be able to broadcast messages [Done]
+UC 6
+1.	Admin to generate QR code [Done]
+2.	Employee to checkin and system records employee’s arrival time. [Done]
+3.	Administrators can monitor check-ins live, verify attendance, and generate post-event reports.

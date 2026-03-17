@@ -1,0 +1,342 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="min-h-screen bg-slate-50">
+    <div class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tight text-slate-900">
+                    Welcome back, {{ user.first_name|default:user.username }}
+                </h1>
+                <p class="mt-1 text-sm text-slate-600">
+                    {% if request.user.is_staff %}
+                        Monitor activity progress, manage drafts, and review upcoming active programs.
+                    {% else %}
+                        Explore upcoming activities and manage the programs you have joined.
+                    {% endif %}
+                </p>
+            </div>
+
+            {% if request.user.is_staff %}
+                <a href="{% url 'create_activity' %}"
+                   class="inline-flex items-center justify-center rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800">
+                    + Create Activity
+                </a>
+            {% endif %}
+        </div>
+
+        {% if request.user.is_staff %}
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-slate-500">Total Activities</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ total_activities|default:"0" }}</p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-slate-500">Upcoming Active Activities</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ upcoming_activities_count|default:"0" }}</p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-slate-500">Draft Activities</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ draft_activities_count|default:"0" }}</p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-slate-500">Open Registrations</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ open_activities_count|default:"0" }}</p>
+                </div>
+            </div>
+
+            <div class="mt-6 grid gap-6 lg:grid-cols-2">
+                <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                        <div>
+                            <h2 class="text-lg font-semibold text-slate-900">Upcoming Active Activities</h2>
+                            <p class="text-sm text-slate-500">Only active activities ordered by closest event date.</p>
+                        </div>
+                        <a href="{% url 'activity_listing' %}" class="text-sm font-medium text-slate-700 hover:text-slate-900">
+                            View all
+                        </a>
+                    </div>
+
+                    <div class="divide-y divide-slate-100">
+                        {% for activity in upcoming_activities %}
+                            <div class="px-6 py-5" data-activity-id="{{ activity.id }}">
+                                <div class="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h3 class="text-base font-semibold text-slate-900">{{ activity.title }}</h3>
+
+                                            <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                                                Active
+                                            </span>
+
+                                            {% if activity.current_participants >= activity.max_capacity %}
+                                                <span id="slot-status-{{ activity.id }}" class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                                    Full
+                                                </span>
+                                            {% elif activity.cutoff_datetime < now %}
+                                                <span id="slot-status-{{ activity.id }}" class="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-medium text-rose-700">
+                                                    Closed
+                                                </span>
+                                            {% else %}
+                                                <span id="slot-status-{{ activity.id }}" class="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-700">
+                                                    Available
+                                                </span>
+                                            {% endif %}
+                                        </div>
+
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ activity.activity_datetime|date:"D, d M Y · g:i A" }}
+                                        </p>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ activity.city }}, {{ activity.state }}
+                                        </p>
+
+                                        <div class="mt-4">
+                                            <div class="mb-2 flex items-center justify-between gap-4">
+                                                <span class="text-sm font-medium text-slate-700">Slot Utilization</span>
+                                                <span id="slot-count-{{ activity.id }}" class="text-sm font-semibold text-slate-900">
+                                                    {{ activity.current_participants|default:0 }} / {{ activity.max_capacity }}
+                                                </span>
+                                            </div>
+
+                                            {% widthratio activity.current_participants|default:0 activity.max_capacity 100 as utilization_width %}
+                                            <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+                                                <div id="slot-bar-{{ activity.id }}"
+                                                     class="h-full rounded-full bg-slate-900 transition-all duration-300"
+                                                     style="width: {{ utilization_width }}%;">
+                                                </div>
+                                            </div>
+
+                                            <p id="slot-percent-{{ activity.id }}" class="mt-2 text-xs text-slate-500">
+                                                {{ utilization_width }}% filled
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div class="flex shrink-0 items-center gap-3">
+                                        <a href="{% url 'activity_manage' activity.id %}"
+                                           class="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+                                            Manage
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="px-6 py-10 text-center text-sm text-slate-500">
+                                No upcoming active activities found.
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+                        <div>
+                            <h2 class="text-lg font-semibold text-slate-900">Draft Activities</h2>
+                            <p class="text-sm text-slate-500">Activities still in draft and not yet published.</p>
+                        </div>
+                        <a href="{% url 'activity_listing' %}" class="text-sm font-medium text-slate-700 hover:text-slate-900">
+                            View all
+                        </a>
+                    </div>
+
+                    <div class="divide-y divide-slate-100">
+                        {% for activity in draft_activities %}
+                            <div class="px-6 py-5">
+                                <div class="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h3 class="text-sm font-semibold text-slate-900">{{ activity.title }}</h3>
+                                            <span class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                                Draft
+                                            </span>
+                                        </div>
+
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ activity.activity_datetime|date:"D, d M Y · g:i A" }}
+                                        </p>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ activity.city }}, {{ activity.state }}
+                                        </p>
+                                    </div>
+
+                                    <a href="{% url 'activity_manage' activity.id %}"
+                                       class="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+                                        Manage
+                                    </a>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="px-6 py-10 text-center text-sm text-slate-500">
+                                No draft activities found.
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+        {% else %}
+            <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-slate-500">Joined Activities</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ joined_count|default:"0" }}</p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-slate-500">Upcoming Joined</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ upcoming_joined_count|default:"0" }}</p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-slate-500">Available Activities</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ available_activities_count|default:"0" }}</p>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <p class="text-sm font-medium text-slate-500">Participated</p>
+                    <p class="mt-2 text-3xl font-bold text-slate-900">{{ participated_count|default:"0" }}</p>
+                </div>
+            </div>
+
+            <div class="mt-6 grid gap-6 lg:grid-cols-2">
+                <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div class="border-b border-slate-100 px-6 py-4">
+                        <h2 class="text-lg font-semibold text-slate-900">My Upcoming Activities</h2>
+                        <p class="text-sm text-slate-500">Activities you already joined.</p>
+                    </div>
+
+                    <div class="divide-y divide-slate-100">
+                        {% for participation in my_upcoming_participations %}
+                            <div class="px-6 py-5">
+                                <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex flex-wrap items-center gap-2">
+                                            <h3 class="text-sm font-semibold text-slate-900">{{ participation.acty.title }}</h3>
+                                            <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                                                Joined
+                                            </span>
+                                        </div>
+
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ participation.acty.activity_datetime|date:"D, d M Y · g:i A" }}
+                                        </p>
+                                        <p class="mt-1 text-sm text-slate-500">
+                                            {{ participation.acty.city }}, {{ participation.acty.state }}
+                                        </p>
+                                    </div>
+
+                                    <a href="{% url 'activity_manage' participation.acty.id %}"
+                                       class="inline-flex items-center rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100">
+                                        View
+                                    </a>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="px-6 py-10 text-center text-sm text-slate-500">
+                                You have not joined any upcoming activities yet.
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+                    <div class="border-b border-slate-100 px-6 py-4">
+                        <h2 class="text-lg font-semibold text-slate-900">Available Activities</h2>
+                        <p class="text-sm text-slate-500">Closest upcoming active activities with live slot utilization.</p>
+                    </div>
+
+                    <div class="divide-y divide-slate-100">
+                        {% for activity in available_activities %}
+                            <div class="px-6 py-5" data-activity-id="{{ activity.id }}">
+                                <div class="flex flex-col gap-4">
+                                    <div class="flex items-start justify-between gap-3">
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <h3 class="text-sm font-semibold text-slate-900">{{ activity.title }}</h3>
+                                                <span class="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-700">
+                                                    Active
+                                                </span>
+
+                                                {% if activity.current_participants >= activity.max_capacity %}
+                                                    <span id="slot-status-{{ activity.id }}" class="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-700">
+                                                        Full
+                                                    </span>
+                                                {% elif activity.cutoff_datetime < now %}
+                                                    <span id="slot-status-{{ activity.id }}" class="rounded-full bg-rose-100 px-2.5 py-1 text-xs font-medium text-rose-700">
+                                                        Closed
+                                                    </span>
+                                                {% else %}
+                                                    <span id="slot-status-{{ activity.id }}" class="rounded-full bg-sky-100 px-2.5 py-1 text-xs font-medium text-sky-700">
+                                                        Available
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+
+                                            <p class="mt-1 text-sm text-slate-500">
+                                                {{ activity.activity_datetime|date:"D, d M Y · g:i A" }}
+                                            </p>
+                                            <p class="mt-1 text-sm text-slate-500">
+                                                {{ activity.city }}, {{ activity.state }}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <div class="mb-2 flex items-center justify-between gap-4">
+                                            <span class="text-sm font-medium text-slate-700">Slot Utilization</span>
+                                            <span id="slot-count-{{ activity.id }}" class="text-sm font-semibold text-slate-900">
+                                                {{ activity.current_participants|default:0 }} / {{ activity.max_capacity }}
+                                            </span>
+                                        </div>
+
+                                        {% widthratio activity.current_participants|default:0 activity.max_capacity 100 as utilization_width %}
+                                        <div class="h-2.5 w-full overflow-hidden rounded-full bg-slate-200">
+                                            <div id="slot-bar-{{ activity.id }}"
+                                                 class="h-full rounded-full bg-slate-900 transition-all duration-300"
+                                                 style="width: {{ utilization_width }}%;">
+                                            </div>
+                                        </div>
+
+                                        <p id="slot-percent-{{ activity.id }}" class="mt-2 text-xs text-slate-500">
+                                            {{ utilization_width }}% filled
+                                        </p>
+                                    </div>
+
+                                    <div class="flex items-center justify-end">
+                                        {% if activity.is_joined or activity.user_participation_status == "joined" %}
+                                            <a href="{% url 'activity_manage' activity.id %}"
+                                               class="rounded-xl bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700">
+                                                Joined
+                                            </a>
+                                        {% else %}
+                                            <form method="post" action="{% url 'participate' activity.id %}">
+                                                {% csrf_token %}
+                                                <button
+                                                    type="submit"
+                                                    name="action"
+                                                    value="join_activity"
+                                                    class="rounded-xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800">
+                                                    Join Now
+                                                </button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="px-6 py-10 text-center text-sm text-slate-500">
+                                No open activities available at the moment.
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
